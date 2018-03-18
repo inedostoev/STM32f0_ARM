@@ -19,15 +19,14 @@ void Exti_Config(void);
 void TurnOn(uint16_t digNum, uint8_t number);
 void Set_Time(uint8_t alarm_flag);
 
-uint64_t min = 0, hour = 0;
-int dynamic_tick;
+uint64_t min = 0, hour = 12;
 uint8_t button1_flag = 0;
 uint8_t button2_flag = 0;
 uint8_t button2_long_flag = 0;
 uint8_t point_flag = 0;
 
 uint8_t codes[10] = {
-    0b0111111, 
+    0b0111111,
     0b0000110,
     0b1011011,
     0b1001111,
@@ -51,19 +50,18 @@ uint8_t alarm[4] = {0, 0, 0, 0};
 
 main(void) {
         SystemClock_Config();
-        Ports_Config(); 
+        Ports_Config();
         Exti_Config();
 
         uint8_t no_alarm_flag = 0;
-        
+
         while(1) {
-            
+
             for(uint8_t i = 0; i < 4; i ++) { //see_real_time
                 TurnOn(i, time[i]);
             }
-           
 
-            if((time[0] == alarm[0] && time[1] == alarm[1] && 
+            if((time[0] == alarm[0] && time[1] == alarm[1] &&
                 time[2] == alarm[2] && time[3] == alarm[3]) && no_alarm_flag) {
                 LL_GPIO_SetOutputPin(GPIOA, BELLPIN);
                 LL_mDelay(3);
@@ -73,18 +71,18 @@ main(void) {
                     no_alarm_flag = 0;
                 }
             }
-            
+
             while(button1_flag) {     //set_clock
                 button1_flag = 0;
                 Set_Time(0);
             }
-            
+
             while(button2_flag) {     //set_alarm
                 button2_flag = 0;
                 no_alarm_flag = 1;
                 Set_Time(1);
             }
-            
+
             while(button2_long_flag) { //see_alarm_time
                 for(uint8_t i = 0; i < 4; i ++) {
                     TurnOn(i, alarm[i]);
@@ -104,7 +102,7 @@ void Set_Time(uint8_t alarm_flag) {
                 a++;
                 switch(i) {
                     case 0: if(a == 3) a = 0; break;
-                    case 1: if(time[0] == 2 && a == 4) a = 0; break; 
+                    case 1: if(time[0] == 2 && a == 4) a = 0; break;
                     case 2: if(a == 6) a = 0; break;
                 }
                 if(a == 10) a = 0;
@@ -206,25 +204,25 @@ void Ports_Config() {
 
 void Exti_Config(void) {
     LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTA, LL_SYSCFG_EXTI_LINE0 | LL_SYSCFG_EXTI_LINE1);
-    
+
     LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_0 | LL_EXTI_LINE_1);
-    
+
     LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_0 | LL_EXTI_LINE_1);
- 
+
     NVIC_SetPriority(EXTI0_1_IRQn, 1);
     NVIC_EnableIRQ(EXTI0_1_IRQn);
 }
 
 void EXTI0_1_IRQHandler(void) {
-    if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0)) { 
+    if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0)) {
         LL_mDelay(100);
         if(LL_GPIO_IsInputPinSet(GPIOA, BUT1)) {
             button1_flag = 1;
         }
-        LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0); 
-    } 
-    
-    if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_1)) { 
+        LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
+    }
+
+    if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_1)) {
         LL_mDelay(100);
         if(LL_GPIO_IsInputPinSet(GPIOA, BUT2)) {
             LL_mDelay(500);
@@ -233,8 +231,8 @@ void EXTI0_1_IRQHandler(void) {
             }
             else button2_flag = 1;
         }
-        LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_1); 
-    } 
+        LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_1);
+    }
 }
 
 void
@@ -257,7 +255,6 @@ PendSV_Handler(void) {
 int tick;
 void
 SysTick_Handler(void) {
-    dynamic_tick++;
     tick++;
     if(tick % 1000 == 0) {
         point_flag = !point_flag;
